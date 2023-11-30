@@ -28,13 +28,11 @@ class Game():
 
         self.apos = None
 
-    def processMessage(self, message):
-        if message == "quit":
-            self.client = None
-            return [0,0]
-
-        p = list(map(int, message.split(';')))
-        return p
+    def pos(self, message):
+        self.pos2 = [int(i) for i in message.split(";")]
+    
+    def quit(self, message):
+        self.client = None
 
     def run(self):
         while self.running:
@@ -48,7 +46,7 @@ class Game():
             if self.prevpos != self.player.pos:
                 self.prevpos = self.player.pos.copy()
                 if self.client:
-                    msg = str(int(self.player.pos[0]))+";"+str(int(self.player.pos[1]))
+                    msg = str("pos:"+str(int(self.player.pos[0])))+";"+str(int(self.player.pos[1]))
                     self.client.sendMessage(msg)
 
 
@@ -56,13 +54,15 @@ class Game():
                 if event.type == pygame.QUIT:
                     self.running = False
                     if self. client:
-                        self.client.sendMessage("quit")
+                        self.client.sendMessage("quit:True")
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_c:
                         if not self.client:
                             self.client = Client('127.0.0.1', 9999)
                             self.client.startThread()
+                            self.client.addNetworkCommand("pos", self.pos)
+                            self.client.addNetworkCommand("quit", self.quit)
                             print("client started!")
 
                     if event.key == pygame.K_LEFT:
@@ -83,7 +83,7 @@ class Game():
                         self.apos = None
 
             if self.client:
-                self.pos2 = self.processMessage(self.client.getMessage("0;0"))
+                self.client.processMessage()
 
             self.display.blit(self.assets["player"], (self.pos2[0], self.pos2[1]))
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))

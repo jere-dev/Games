@@ -6,7 +6,15 @@ class Client(object):
     def __init__(self, host, port):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((host, port))
-        self.message = ""
+        self.message = "start:connected"
+        self.networkCommands = {"start":lambda mes:print(mes)}
+
+    def addNetworkCommand(self, name, func):
+        self.networkCommands[name] = func
+
+    def processMessage(self):
+        p = self.message.split(":")
+        self.networkCommands[p[0]](p[1])
 
     def __del__(self):
         self.client.close()
@@ -30,6 +38,7 @@ class Client(object):
                     print(data.decode('utf-8'))
                 else:
                     print('Server disconnected')
+                    #self.message = None
                     break
             except:
                 self.client.close()
